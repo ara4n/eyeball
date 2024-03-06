@@ -3,7 +3,7 @@ use std::{fmt, ops::Deref};
 use super::ObservableVector;
 
 /// A handle to a single value in an [`ObservableVector`].
-pub struct ObservableVectorEntry<'a, T> {
+pub struct ObservableVectorEntry<'a, T: Clone> {
     inner: &'a mut ObservableVector<T>,
     index: EntryIndex<'a>,
 }
@@ -37,7 +37,7 @@ where
     }
 }
 
-impl<T> fmt::Debug for ObservableVectorEntry<'_, T>
+impl<T: Clone> fmt::Debug for ObservableVectorEntry<'_, T>
 where
     T: fmt::Debug,
 {
@@ -50,7 +50,7 @@ where
     }
 }
 
-impl<T> Deref for ObservableVectorEntry<'_, T> {
+impl<T: Clone> Deref for ObservableVectorEntry<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -58,7 +58,7 @@ impl<T> Deref for ObservableVectorEntry<'_, T> {
     }
 }
 
-impl<T> Drop for ObservableVectorEntry<'_, T> {
+impl<T: Clone> Drop for ObservableVectorEntry<'_, T> {
     fn drop(&mut self) {
         // If there is an association with an externally-stored index, that
         // index must be incremented on drop. This allows an external iterator
@@ -108,7 +108,7 @@ impl<'a> EntryIndex<'a> {
 ///
 /// ¹ conceptually, though it does not implement `std::iterator::Iterator`
 #[derive(Debug)]
-pub struct ObservableVectorEntries<'a, T> {
+pub struct ObservableVectorEntries<'a, T: Clone> {
     inner: &'a mut ObservableVector<T>,
     index: usize,
 }

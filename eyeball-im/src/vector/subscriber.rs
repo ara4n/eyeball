@@ -20,7 +20,7 @@ use super::{BroadcastMessage, OneOrManyDiffs, VectorDiff};
 
 /// A subscriber for updates of a [`Vector`].
 #[derive(Debug)]
-pub struct VectorSubscriber<T> {
+pub struct VectorSubscriber<T: Clone> {
     values: Vector<T>,
     rx: Receiver<BroadcastMessage<T>>,
 }
@@ -76,19 +76,19 @@ type ReusableBoxRecvFuture<T> =
 /// other futures-related crates have extension traits with convenience
 /// methods).
 #[derive(Debug)]
-pub struct VectorSubscriberStream<T> {
+pub struct VectorSubscriberStream<T: Clone> {
     inner: ReusableBoxRecvFuture<T>,
     state: VectorSubscriberStreamState<T>,
 }
 
-impl<T> VectorSubscriberStream<T> {
+impl<T: Clone> VectorSubscriberStream<T> {
     fn new(inner: ReusableBoxRecvFuture<T>) -> Self {
         Self { inner, state: VectorSubscriberStreamState::Recv }
     }
 }
 
 #[derive(Debug)]
-enum VectorSubscriberStreamState<T> {
+enum VectorSubscriberStreamState<T: Clone> {
     // Stream is waiting on a new message from the inner broadcast receiver.
     Recv,
     // Stream is yielding remaining items from a previous message with multiple
@@ -97,7 +97,7 @@ enum VectorSubscriberStreamState<T> {
 }
 
 // Not clear why this explicit impl is needed, but it's not unsafe so it is fine
-impl<T> Unpin for VectorSubscriberStreamState<T> {}
+impl<T: Clone> Unpin for VectorSubscriberStreamState<T> {}
 
 impl<T: Clone + Send + Sync + 'static> Stream for VectorSubscriberStream<T> {
     type Item = VectorDiff<T>;
@@ -160,11 +160,11 @@ impl<T: Clone + Send + Sync + 'static> Stream for VectorSubscriberStream<T> {
 /// other futures-related crates have extension traits with convenience
 /// methods).
 #[derive(Debug)]
-pub struct VectorSubscriberBatchedStream<T> {
+pub struct VectorSubscriberBatchedStream<T: Clone> {
     inner: ReusableBoxRecvFuture<T>,
 }
 
-impl<T> VectorSubscriberBatchedStream<T> {
+impl<T: Clone> VectorSubscriberBatchedStream<T> {
     fn new(inner: ReusableBoxRecvFuture<T>) -> Self {
         Self { inner }
     }
@@ -174,7 +174,7 @@ impl<T: Clone + Send + Sync + 'static> Stream for VectorSubscriberBatchedStream<
     type Item = Vec<VectorDiff<T>>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        fn append<T>(target: &mut Vec<VectorDiff<T>>, source: OneOrManyDiffs<T>) {
+        fn append<T: Clone>(target: &mut Vec<VectorDiff<T>>, source: OneOrManyDiffs<T>) {
             match source {
                 OneOrManyDiffs::One(diff) => target.push(diff),
                 OneOrManyDiffs::Many(mut diffs) => target.append(&mut diffs),

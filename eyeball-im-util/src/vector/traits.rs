@@ -39,12 +39,12 @@ impl<T: Clone + Send + Sync + 'static> VectorDiffContainer for Vec<VectorDiff<T>
 }
 
 /// Extension trait for [`VectorSubscriber`].
-pub trait VectorSubscriberExt<T> {
+pub trait VectorSubscriberExt<T: Clone> {
     /// Create a [`BatchedVectorSubscriber`] from `self`.
     fn batched(self) -> BatchedVectorSubscriber<T>;
 }
 
-impl<T> VectorSubscriberExt<T> for VectorSubscriber<T> {
+impl<T: Clone> VectorSubscriberExt<T> for VectorSubscriber<T> {
     fn batched(self) -> BatchedVectorSubscriber<T> {
         BatchedVectorSubscriber { inner: self }
     }
@@ -53,7 +53,7 @@ impl<T> VectorSubscriberExt<T> for VectorSubscriber<T> {
 /// A wrapper around [`VectorSubscriber`] with a different [`VectorObserver`]
 /// impl.
 #[derive(Debug)]
-pub struct BatchedVectorSubscriber<T> {
+pub struct BatchedVectorSubscriber<T: Clone> {
     inner: VectorSubscriber<T>,
 }
 

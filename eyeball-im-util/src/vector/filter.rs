@@ -219,7 +219,7 @@ where
         self.append_filter_map(values, f).map(|values| VectorDiff::Append { values })
     }
 
-    fn handle_clear<U>(&mut self) -> Option<VectorDiff<U>> {
+    fn handle_clear<U: Clone>(&mut self) -> Option<VectorDiff<U>> {
         self.filtered_indices.clear();
         *self.original_len = 0;
         Some(VectorDiff::Clear)
@@ -262,7 +262,7 @@ where
         })
     }
 
-    fn handle_pop_front<U>(&mut self) -> Option<VectorDiff<U>> {
+    fn handle_pop_front<U: Clone>(&mut self) -> Option<VectorDiff<U>> {
         *self.original_len -= 1;
         let result = self.filtered_indices.front().map_or(false, |&idx| idx == 0).then(|| {
             assert!(self.filtered_indices.pop_front().is_some());
@@ -275,7 +275,7 @@ where
         result
     }
 
-    fn handle_pop_back<U>(&mut self) -> Option<VectorDiff<U>> {
+    fn handle_pop_back<U: Clone>(&mut self) -> Option<VectorDiff<U>> {
         *self.original_len -= 1;
         self.filtered_indices.back().map_or(false, |&idx| idx == *self.original_len).then(|| {
             assert!(self.filtered_indices.pop_back().is_some());
@@ -337,7 +337,7 @@ where
         }
     }
 
-    fn handle_remove<U>(&mut self, index: usize) -> Option<VectorDiff<U>> {
+    fn handle_remove<U: Clone>(&mut self, index: usize) -> Option<VectorDiff<U>> {
         let original_idx = index;
         *self.original_len -= 1;
 
@@ -356,7 +356,7 @@ where
         result
     }
 
-    fn handle_truncate<U>(&mut self, len: usize) -> Option<VectorDiff<U>> {
+    fn handle_truncate<U: Clone>(&mut self, len: usize) -> Option<VectorDiff<U>> {
         *self.original_len = len;
         let new_filtered_len = self.filtered_indices.iter().take_while(|&&idx| idx < len).count();
         (new_filtered_len < self.filtered_indices.len()).then(|| {

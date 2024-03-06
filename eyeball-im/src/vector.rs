@@ -2,6 +2,7 @@ use std::{fmt, ops};
 
 use imbl::Vector;
 use tokio::sync::broadcast::{self, Sender};
+use serde::Serialize;
 
 mod entry;
 mod subscriber;
@@ -17,7 +18,7 @@ pub use self::{
 };
 
 /// An ordered list of elements that broadcasts any changes made to it.
-pub struct ObservableVector<T> {
+pub struct ObservableVector<T: Clone> {
     values: Vector<T>,
     sender: Sender<BroadcastMessage<T>>,
 }
@@ -288,7 +289,7 @@ impl<T: Clone + Send + Sync + 'static> Default for ObservableVector<T> {
     }
 }
 
-impl<T> fmt::Debug for ObservableVector<T>
+impl<T: Clone> fmt::Debug for ObservableVector<T>
 where
     T: fmt::Debug,
 {
@@ -299,7 +300,7 @@ where
 
 // Note: No DerefMut because all mutating must go through inherent methods that
 // notify subscribers
-impl<T> ops::Deref for ObservableVector<T> {
+impl<T: Clone> ops::Deref for ObservableVector<T> {
     type Target = Vector<T>;
 
     fn deref(&self) -> &Self::Target {
@@ -316,18 +317,18 @@ impl<T: Clone + Send + Sync + 'static> From<Vector<T>> for ObservableVector<T> {
 }
 
 #[derive(Clone)]
-struct BroadcastMessage<T> {
+struct BroadcastMessage<T: Clone> {
     diffs: OneOrManyDiffs<T>,
     state: Vector<T>,
 }
 
 #[derive(Clone)]
-enum OneOrManyDiffs<T> {
+enum OneOrManyDiffs<T: Clone> {
     One(VectorDiff<T>),
     Many(Vec<VectorDiff<T>>),
 }
 
-impl<T> OneOrManyDiffs<T> {
+impl<T: Clone> OneOrManyDiffs<T> {
     fn into_vec(self) -> Vec<VectorDiff<T>> {
         match self {
             OneOrManyDiffs::One(diff) => vec![diff],
@@ -338,7 +339,8 @@ impl<T> OneOrManyDiffs<T> {
 
 /// A change to an [`ObservableVector`].
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub enum VectorDiff<T> {
+#[cfg_attr(feature = "serde", derive(Serialize))]
+pub enum VectorDiff<T: Clone> {
     /// Multiple elements were appended.
     Append {
         /// The appended elements.

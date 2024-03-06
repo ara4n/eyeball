@@ -2,14 +2,14 @@ use arrayvec::ArrayVec;
 use eyeball_im::VectorDiff;
 use smallvec::SmallVec;
 
-pub trait VectorDiffContainerOps<T>: Sized {
+pub trait VectorDiffContainerOps<T: Clone>: Sized {
     type Family: VectorDiffContainerFamily;
     type LimitBuf: Default;
     type SortBuf: Default;
 
     fn from_item(vector_diff: VectorDiff<T>) -> Self;
 
-    fn filter_map<U>(
+    fn filter_map<U: Clone>(
         self,
         f: impl FnMut(VectorDiff<T>) -> Option<VectorDiff<U>>,
     ) -> Option<VectorDiffContainerFamilyMember<Self::Family, U>>;
@@ -34,7 +34,7 @@ pub trait VectorDiffContainerOps<T>: Sized {
 #[allow(unreachable_pub)]
 pub type VectorDiffContainerFamilyMember<F, U> = <F as VectorDiffContainerFamily>::Member<U>;
 
-impl<T> VectorDiffContainerOps<T> for VectorDiff<T> {
+impl<T: Clone> VectorDiffContainerOps<T> for VectorDiff<T> {
     type Family = VectorDiffFamily;
     type LimitBuf = Option<VectorDiff<T>>;
     type SortBuf = SmallVec<[VectorDiff<T>; 2]>;
@@ -43,7 +43,7 @@ impl<T> VectorDiffContainerOps<T> for VectorDiff<T> {
         vector_diff
     }
 
-    fn filter_map<U>(
+    fn filter_map<U: Clone>(
         self,
         mut f: impl FnMut(VectorDiff<T>) -> Option<VectorDiff<U>>,
     ) -> Option<VectorDiffContainerFamilyMember<Self::Family, U>> {
@@ -100,7 +100,7 @@ impl<T> VectorDiffContainerOps<T> for VectorDiff<T> {
     }
 }
 
-impl<T> VectorDiffContainerOps<T> for Vec<VectorDiff<T>> {
+impl<T: Clone> VectorDiffContainerOps<T> for Vec<VectorDiff<T>> {
     type Family = VecVectorDiffFamily;
     type LimitBuf = ();
     type SortBuf = ();
@@ -109,7 +109,7 @@ impl<T> VectorDiffContainerOps<T> for Vec<VectorDiff<T>> {
         vec![vector_diff]
     }
 
-    fn filter_map<U>(
+    fn filter_map<U: Clone>(
         self,
         f: impl FnMut(VectorDiff<T>) -> Option<VectorDiff<U>>,
     ) -> Option<VectorDiffContainerFamilyMember<Self::Family, U>> {
@@ -161,19 +161,19 @@ impl<T> VectorDiffContainerOps<T> for Vec<VectorDiff<T>> {
 
 #[allow(unreachable_pub)]
 pub trait VectorDiffContainerFamily {
-    type Member<T>: VectorDiffContainerOps<T, Family = Self>;
+    type Member<T: Clone>: VectorDiffContainerOps<T, Family = Self>;
 }
 
 #[derive(Debug)]
 pub enum VectorDiffFamily {}
 
 impl VectorDiffContainerFamily for VectorDiffFamily {
-    type Member<T> = VectorDiff<T>;
+    type Member<T: Clone> = VectorDiff<T>;
 }
 
 #[derive(Debug)]
 pub enum VecVectorDiffFamily {}
 
 impl VectorDiffContainerFamily for VecVectorDiffFamily {
-    type Member<T> = Vec<VectorDiff<T>>;
+    type Member<T: Clone> = Vec<VectorDiff<T>>;
 }
