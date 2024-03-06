@@ -2,6 +2,7 @@ use std::{fmt, ops};
 
 use imbl::Vector;
 use tokio::sync::broadcast::{self, Sender};
+#[cfg(feature = "serde")]
 use serde::Serialize;
 
 mod entry;
